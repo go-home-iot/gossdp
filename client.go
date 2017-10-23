@@ -3,6 +3,7 @@ package gossdp
 import (
     "net"
     "sync"
+    "strconv"
     "strings"
 )
 
@@ -45,7 +46,7 @@ func NewSsdpClientWithLogger(l ClientListener, lg LoggerInterface) (*ClientSsdp,
     c.listener = l
     c.writeChannel = make(chan writeMessage)
     c.logger = lg
-    if err := c.createSocket(); err != nil {
+    if err := c.createSocket(0); err != nil {
         return nil, err
     }
     c.isRunning = true
@@ -53,8 +54,21 @@ func NewSsdpClientWithLogger(l ClientListener, lg LoggerInterface) (*ClientSsdp,
     return &c, nil
 }
 
-func (c *ClientSsdp) createSocket() error {
-    addr, err := net.ResolveUDPAddr("udp4", "0.0.0.0:0")
+func NewSsdpClientWithLoggerAndSpecificPort(l ClientListener, lg LoggerInterface, port int) (*ClientSsdp, error) {
+    var c ClientSsdp
+    c.listener = l
+    c.writeChannel = make(chan writeMessage)
+    c.logger = lg
+    if err := c.createSocket(port); err != nil {
+        return nil, err
+    }
+    c.isRunning = true
+
+    return &c, nil
+}
+
+func (c *ClientSsdp) createSocket(port int) error {
+    addr, err := net.ResolveUDPAddr("udp4", "0.0.0.0:" + strconv.Itoa(port))
     if err != nil {
         return err
     }
